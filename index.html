@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>VLICTOR SOUND MUSIC</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Impact&family=Arial&display=swap');
+  
+  :root {
+    --bg: #0a1628;
+    --panel: #12263a;
+    --accent: #3b82f6;
+    --accent2: #60a5fa;
+    --text: #e0f2fe;
+    --key-white: #f8fafc;
+    --key-black: #1e293b;
+    --border: #1e3a5f;
+    --glow: 0 0 12px rgba(59,130,246,0.5);
+    --btn-bg: #1e3a5f;
+    --danger: #ef4444;
+    --success: #22c55e;
+  }
+
+  body.theme-microsoft {
+    --bg: #f0f0f0; --panel: #ffffff; --accent: #0078d4; --accent2: #106ebe;
+    --text: #1a1a1a; --key-white: #ffffff; --key-black: #2d2d2d;
+    --border: #c8c8c8; --glow: none; --btn-bg: #e5e5e5;
+  }
+  body.theme-pacman {
+    --bg: #000000; --panel: #111111; --accent: #ffff00; --accent2: #ffcc00;
+    --text: #ffff00; --key-white: #ffffcc; --key-black: #222200;
+    --border: #444400; --glow: 0 0 15px #ffff00; --btn-bg: #222200;
+  }
+  body.theme-cyberpunk {
+    --bg: #0d0221; --panel: #1a0a2e; --accent: #ff00ff; --accent2: #00ffff;
+    --text: #e0aaff; --key-white: #e0d4ff; --key-black: #1a0033;
+    --border: #4a0080; --glow: 0 0 20px #ff00ff; --btn-bg: #2d0a4e;
+  }
+  body.theme-neon {
+    --bg: #050510; --panel: #0a0a1a; --accent: #00ffcc; --accent2: #00ccff;
+    --text: #e0ffff; --key-white: #e0fff8; --key-black: #001a15;
+    --border: #004d40; --glow: 0 0 18px #00ffcc; --btn-bg: #00332b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex; flex-direction: column;
+    transition: background 0.35s, color 0.35s;
+  }
+
+  #main-menu {
+    position: fixed; inset: 0; z-index: 1000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: var(--bg);
+    transition: opacity 0.4s, visibility 0.4s;
+  }
+  #main-menu.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+  .menu-title {
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-size: clamp(2.8rem, 8vw, 5.5rem);
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    text-shadow: var(--glow);
+    margin-bottom: 0.3em;
+    text-align: center;
+  }
+  .menu-sub { font-size: 1rem; opacity: 0.7; margin-bottom: 2.5rem; letter-spacing: 0.15em; }
+  .start-btn {
+    font-family: Impact, sans-serif;
+    font-size: 1.8rem; letter-spacing: 0.12em;
+    padding: 18px 70px;
+    background: var(--accent); color: var(--bg);
+    border: none; border-radius: 8px; cursor: pointer;
+    box-shadow: var(--glow);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .start-btn:hover { transform: scale(1.06); }
+  .start-btn:active { transform: scale(0.97); }
+
+  .menu-settings-btn {
+    position: absolute; top: 20px; right: 20px;
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--panel); border: 2px solid var(--accent);
+    color: var(--accent); font-size: 1.4rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--glow);
+  }
+  .menu-settings-btn:hover { background: var(--accent); color: var(--bg); }
+
+  #settings-panel {
+    position: absolute; top: 80px; right: 20px;
+    background: var(--panel); border: 2px solid var(--accent);
+    border-radius: 12px; padding: 20px; min-width: 260px;
+    box-shadow: var(--glow); display: none; z-index: 1100;
+  }
+  #settings-panel.show { display: block; }
+  .settings-title { font-weight: bold; margin-bottom: 12px; color: var(--accent); }
+  .theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+  .theme-btn {
+    padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--btn-bg); color: var(--text); cursor: pointer; font-size: 0.85rem;
+  }
+  .theme-btn.active { border-color: var(--accent); background: var(--accent); color: var(--bg); font-weight: bold; }
+  .vol-row { display: flex; align-items: center; gap: 10px; }
+  .vol-row input[type=range] { flex: 1; accent-color: var(--accent); }
+
+  #app-screen {
+    display: none; flex-direction: column; height: 100%;
+  }
+  #app-screen.active { display: flex; }
+
+  .app-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; background: var(--panel);
+    border-bottom: 2px solid var(--accent); box-shadow: var(--glow);
+    flex-shrink: 0;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .back-btn {
+    width: 40px; height: 40px; border-radius: 8px;
+    background: var(--btn-bg); border: 1px solid var(--border);
+    color: var(--accent); font-size: 1.3rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .back-btn:hover { background: var(--accent); color: var(--bg); }
+  .app-title {
+    font-family: Impact, sans-serif; font-size: 1.4rem;
+    color: var(--accent); letter-spacing: 0.06em;
+  }
+  .header-right { display: flex; gap: 10px; }
+  .hdr-btn {
+    padding: 8px 16px; border-radius: 6px;
+    background: var(--btn-bg); border: 1px solid var(--accent);
+    color: var(--text); font-weight: bold; cursor: pointer; font-size: 0.9rem;
+    transition: 0.15s;
+  }
+  .hdr-btn:hover, .hdr-btn.active { background: var(--accent); color: var(--bg); }
+
+  .app-body {
+    flex: 1; display: flex; overflow: hidden; position: relative;
+  }
+
+  .left-panel {
+    width: 90px; background: var(--panel);
+    border-right: 2px solid var(--border);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 12px 8px; gap: 10px; flex-shrink: 0;
+  }
+  .lp-btn {
+    width: 72px; padding: 10px 4px;
+    background: var(--btn-bg); border: 2px solid #6b7280;
+    border-radius: 8px; color: var(--text); font-size: 0.72rem;
+    font-weight: bold; cursor: pointer; text-align: center;
+    transition: 0.15s; line-height: 1.2;
+  }
+  .lp-btn:hover { border-color: var(--accent); }
+  .lp-btn.active {
+    background: var(--accent); color: var(--bg);
+    border-color: var(--accent); box-shadow: var(--glow);
+  }
+  .lp-btn.recording { background: var(--danger); border-color: var(--danger); color: #fff; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+
+  .center-area {
+    flex: 1; display: flex; flex-direction: column; position: relative;
+    overflow: hidden;
+  }
+  .viz-area {
+    height: 140px; display: flex; align-items: center; justify-content: center;
+    position: relative; flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .piano-wrap {
+    flex: 1; display: flex; align-items: flex-end; justify-content: center;
+    padding: 0 10px 20px; position: relative;
+  }
+  .piano {
+    display: flex; height: 100%; max-height: 280px; width: 100%; max-width: 1100px;
+    position: relative;
+  }
+  .white-key {
+    flex: 1; background: var(--key-white); border: 1px solid #333;
+    border-radius: 0 0 6px 6px; position: relative; cursor: pointer;
+    box-shadow: inset 0 -4px 8px rgba(0,0,0,0.15);
+    transition: background 0.04s, transform 0.04s;
+  }
+  .white-key.active {
+    background: var(--accent); transform: scaleY(0.96);
+    box-shadow: 0 0 12px var(--accent);
+  }
+  .white-key .lbl {
+    position: absolute; bottom: 8px; left: 0; right: 0; text-align: center;
+    font-size: 11px; color: #666; pointer-events: none;
+  }
+  .black-key {
+    position: absolute; width: 4.8%; height: 58%;
+    background: var(--key-black); border-radius: 0 0 4px 4px;
+    z-index: 2; cursor: pointer;
+    box-shadow: inset 0 -2px 4px rgba(255,255,255,0.08);
+    transition: background 0.04s;
+  }
+  .black-key.active { background: #555; box-shadow: 0 0 10px var(--accent); }
+  .black-key .lbl {
+    position: absolute; bottom: 4px; left: 0; right: 0; text-align: center;
+    font-size: 9px; color: #aaa; pointer-events: none;
+  }
+
+  .dropdown {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    background: var(--panel); border: 2px solid var(--accent);
+    border-radius: 0 0 12px 12px; padding: 12px 16px;
+    max-height: 320px; overflow-y: auto; z-index: 50;
+    box-shadow: var(--glow); display: none; min-width: 260px;
+  }
+  .dropdown.show { display: block; }
+  .dd-title { font-weight: bold; color: var(--accent); margin-bottom: 10px; text-align: center; }
+  .dd-item {
+    padding: 9px 14px; border-radius: 6px; cursor: pointer;
+    margin-bottom: 4px; transition: 0.12s;
+  }
+  .dd-item:hover { background: var(--btn-bg); }
+  .dd-item.active { background: var(--accent); color: var(--bg); font-weight: bold; }
+
+  .status-bar {
+    padding: 6px 16px; background: var(--panel); border-top: 1px solid var(--border);
+    font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center;
+    flex-shrink: 0;
+  }
+  .status-left { display: flex; gap: 18px; }
+  .status-item span { color: var(--accent); font-weight: bold; }
+
+  #export-panel {
+    position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%);
+    background: var(--panel); border: 2px solid var(--accent);
+    border-radius: 12px; padding: 16px 20px; z-index: 60;
+    display: none; box-shadow: var(--glow); min-width: 320px;
+  }
+  #export-panel.show { display: block; }
+  .export-title { text-align: center; font-weight: bold; color: var(--accent); margin-bottom: 12px; }
+  .export-btns { display: flex; flex-direction: column; gap: 8px; }
+  .exp-btn {
+    padding: 10px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--btn-bg); color: var(--text); cursor: pointer; font-size: 0.9rem;
+    text-align: left;
+  }
+  .exp-btn:hover { border-color: var(--accent); background: var(--accent); color: var(--bg); }
+  .exp-btn.danger:hover { background: var(--danger); border-color: var(--danger); color: #fff; }
+
+  .loop-badge {
+    position: absolute; top: 8px; right: 12px;
+    background: var(--success); color: #fff; font-size: 0.7rem;
+    padding: 3px 8px; border-radius: 4px; display: none;
+  }
+  .loop-badge.show { display: block; }
+
+  #help-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000;
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  #help-overlay.show { display: flex; }
+  .help-box {
+    background: var(--panel); border: 2px solid var(--accent);
+    border-radius: 12px; padding: 24px; max-width: 520px; max-height: 80vh; overflow-y: auto;
+  }
+  .help-box h2 { color: var(--accent); margin-bottom: 12px; font-family: Impact, sans-serif; }
+  .help-box ul { margin-left: 18px; line-height: 1.6; font-size: 0.9rem; }
+  .help-close { margin-top: 16px; width: 100%; padding: 10px; background: var(--accent); color: var(--bg); border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+  @media (max-width: 700px) {
+    .left-panel { width: 70px; }
+    .lp-btn { width: 58px; font-size: 0.65rem; padding: 8px 2px; }
+    .viz-area { height: 100px; }
+    .app-title { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body class="theme-default">
+
+<div id="main-menu">
+  <button class="menu-settings-btn" id="menu-settings-btn" title="Настройки">⚙</button>
+  <div id="settings-panel">
+    <div class="settings-title">Стиль интерфейса</div>
+    <div class="theme-grid">
+      <button class="theme-btn active" data-theme="default">Синий</button>
+      <button class="theme-btn" data-theme="microsoft">Microsoft</button>
+      <button class="theme-btn" data-theme="pacman">Pac-Man</button>
+      <button class="theme-btn" data-theme="cyberpunk">Cyberpunk</button>
+      <button class="theme-btn" data-theme="neon">Neon</button>
+    </div>
+    <div class="settings-title">Громкость</div>
+    <div class="vol-row">
+      <span>🔇</span>
+      <input type="range" id="master-vol" min="0" max="100" value="15">
+      <span>🔊</span>
+    </div>
+  </div>
+
+  <div class="menu-title">VLICTOR SOUND MUSIC</div>
+  <div class="menu-sub">WEB AUDIO MUSIC STUDIO</div>
+  <button class="start-btn" id="start-btn">НАЧАТЬ</button>
+  <div style="margin-top:2rem;font-size:0.85rem;opacity:0.5">Нажми H для справки по горячим клавишам</div>
+</div>
+
+<div id="app-screen">
+  <div class="app-header">
+    <div class="header-left">
+      <button class="back-btn" id="back-btn" title="В меню">◀</button>
+      <div class="app-title">VLICTOR SOUND MUSIC</div>
+    </div>
+    <div class="header-right">
+      <button class="hdr-btn" id="expr-btn">ВЫРАЖЕНИЕ</button>
+      <button class="hdr-btn" id="instr-btn">ИНСТРУМЕНТ</button>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <div class="left-panel">
+      <button class="lp-btn" id="btn-echo" title="Tab">ЭХО</button>
+      <button class="lp-btn" id="btn-xbig" title="Alt">Х-БИГ</button>
+      <button class="lp-btn" id="btn-big" title="CapsLock">БИГ</button>
+      <button class="lp-btn" id="btn-rec" title="Enter">ЗАПИСЬ</button>
+      <button class="lp-btn" id="btn-sustain" title="Shift+Tab">ПЕРЕКЛ.<br>Сустейн</button>
+    </div>
+
+    <div class="center-area">
+      <div class="loop-badge" id="loop-badge">LOOP ON</div>
+      <div class="viz-area" id="viz-area">
+        <canvas id="viz-canvas" width="280" height="110"></canvas>
+      </div>
+
+      <div class="dropdown" id="expr-dropdown">
+        <div class="dd-title">ВЫРАЖЕНИЕ / ТЕМБР</div>
+        <div id="expr-list"></div>
+      </div>
+      <div class="dropdown" id="instr-dropdown">
+        <div class="dd-title">ИНСТРУМЕНТ</div>
+        <div id="instr-list"></div>
+      </div>
+
+      <div class="piano-wrap">
+        <div class="piano" id="piano"></div>
+      </div>
+
+      <div id="export-panel">
+        <div class="export-title">ЗАПИСЬ ГОТОВА</div>
+        <div class="export-btns">
+          <button class="exp-btn danger" data-action="0">0 — Удалить запись</button>
+          <button class="exp-btn" data-action="1">1 — Включить повтор (Loop)</button>
+          <button class="exp-btn" data-action="2">2 — Экспорт музыки (WAV)</button>
+          <button class="exp-btn" data-action="3">3 — Экспорт видео (пиано-ролл)</button>
+          <button class="exp-btn" data-action="4">4 — Скопировать аудио в буфер</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-left">
+      <div class="status-item">Инструмент: <span id="st-instr">Пианино</span></div>
+      <div class="status-item">Выражение: <span id="st-expr">Обычный</span></div>
+      <div class="status-item">Октава: <span id="st-oct">4</span></div>
+    </div>
+    <div id="st-modes"></div>
+  </div>
+</div>
+
+<div id="help-overlay">
+  <div class="help-box">
+    <h2>Горячие клавиши</h2>
+    <ul>
+      <li><b>Белые клавиши:</b> Ф В А П Р О Л Д Ж (и русские аналоги)</li>
+      <li><b>Чёрные клавиши:</b> Ц У Е Ш Щ Х</li>
+      <li><b>Tab</b> — ЭХО вкл/выкл</li>
+      <li><b>Shift + Tab</b> — бесконечный СУСТЕЙН</li>
+      <li><b>Alt</b> — Ультра-Биг-мод</li>
+      <li><b>CapsLock</b> — Биг-мод</li>
+      <li><b>Enter</b> — начать / остановить запись</li>
+      <li><b>1</b> — меню Выражений · <b>2</b> — меню Инструментов</li>
+      <li><b>↑ / ↓</b> — смена октавы</li>
+      <li><b>H</b> — эта справка</li>
+    </ul>
+    <button class="help-close" id="help-close">Закрыть</button>
+  </div>
+</div>
+
+<script>
+const INSTRUMENTS = [
+  { id: 'piano',   name: 'Пианино',     type: 'piano',   attack: 0.008, decay: 0.25, sustain: 0.25, release: 0.6,  vol: 0.22 },
+  { id: 'guitar',  name: 'Гитара',      type: 'plucked', attack: 0.004, decay: 0.18, sustain: 0.12, release: 0.5,  vol: 0.20 },
+  { id: 'flute',   name: 'Флейта',      type: 'wind',    attack: 0.10,  decay: 0.12, sustain: 0.80, release: 0.35, vol: 0.14 },
+  { id: 'morin',   name: 'Морин-хуур',  type: 'bowed',   attack: 0.18,  decay: 0.15, sustain: 0.75, release: 0.45, vol: 0.16, formant: 900  },
+  { id: 'violin',  name: 'Скрипка',     type: 'bowed',   attack: 0.16,  decay: 0.12, sustain: 0.85, release: 0.40, vol: 0.13, formant: 1400 },
+  { id: 'cello',   name: 'Виолончель',  type: 'bowed',   attack: 0.18,  decay: 0.15, sustain: 0.80, release: 0.50, vol: 0.15, formant: 550  },
+  { id: 'bassg',   name: 'Бас-гитара',  type: 'plucked', attack: 0.006, decay: 0.30, sustain: 0.20, release: 0.55, vol: 0.24 },
+  { id: 'organ',   name: 'Орган',       type: 'organ',   attack: 0.02,  decay: 0.05, sustain: 0.90, release: 0.20, vol: 0.12 },
+  { id: 'trumpet', name: 'Труба',       type: 'brass',   attack: 0.05,  decay: 0.10, sustain: 0.78, release: 0.28, vol: 0.14, formant: 1500 },
+  { id: 'sax',     name: 'Саксофон',    type: 'reed',    attack: 0.06,  decay: 0.10, sustain: 0.75, release: 0.32, vol: 0.14, formant: 1100 },
+  { id: 'harp',    name: 'Арфа',        type: 'plucked', attack: 0.003, decay: 0.45, sustain: 0.08, release: 0.70, vol: 0.17 },
+  { id: 'marimba', name: 'Маримба',     type: 'perc',    attack: 0.002, decay: 0.35, sustain: 0.00, release: 0.40, vol: 0.20 },
+  { id: 'choir',   name: 'Хор',         type: 'voice',   attack: 0.20,  decay: 0.20, sustain: 0.85, release: 0.60, vol: 0.12, formant: 800  }
+];
+
+const EXPRESSIONS = [
+  { id: 'normal',    name: 'Обычный',          filter: null,   detune: 0,  gain: 1.0,  wave: null },
+  { id: 'alien',     name: 'Электронный (Инопланетный)', filter: 800, detune: 12, gain: 0.9, wave: 'sawtooth' },
+  { id: 'bass',      name: 'Басовый',          filter: 400,   detune: -8, gain: 1.2,  wave: null },
+  { id: 'bright',    name: 'Яркий',            filter: 3500,  detune: 4,  gain: 1.0,  wave: null },
+  { id: 'soft',      name: 'Мягкий',           filter: 1200,  detune: 0,  gain: 0.75, wave: 'sine' },
+  { id: 'metal',     name: 'Металлический',    filter: 2200,  detune: 7,  gain: 0.95, wave: 'square' },
+  { id: 'glass',     name: 'Стеклянный',       filter: 4000,  detune: 15, gain: 0.8,  wave: 'triangle' },
+  { id: 'warm',      name: 'Тёплый',           filter: 900,   detune: -3, gain: 1.05, wave: null },
+  { id: 'dark',      name: 'Тёмный',           filter: 500,   detune: -10,gain: 0.9,  wave: null },
+  { id: 'plucked',   name: 'Щипковый',         filter: 1800,  detune: 0,  gain: 1.0,  wave: null }
+];
+
+const WHITE_KEYS = [
+  { code: 'KeyA',  label: 'Ф', note: 0  },
+  { code: 'KeyS',  label: 'Ы', note: 2  },
+  { code: 'KeyD',  label: 'В', note: 4  },
+  { code: 'KeyF',  label: 'А', note: 5  },
+  { code: 'KeyG',  label: 'П', note: 7  },
+  { code: 'KeyH',  label: 'Р', note: 9  },
+  { code: 'KeyJ',  label: 'О', note: 11 },
+  { code: 'KeyK',  label: 'Л', note: 12 },
+  { code: 'KeyL',  label: 'Д', note: 14 },
+  { code: 'Semicolon', label: 'Ж', note: 16 },
+  { code: 'Quote', label: 'Э', note: 17 }
+];
+
+const BLACK_KEYS = [
+  { code: 'KeyW',  label: 'Ц', note: 1,  after: 0 },
+  { code: 'KeyE',  label: 'У', note: 3,  after: 1 },
+  { code: 'KeyT',  label: 'Е', note: 6,  after: 3 },
+  { code: 'KeyY',  label: 'Н', note: 8,  after: 4 },
+  { code: 'KeyU',  label: 'Г', note: 10, after: 5 },
+  { code: 'KeyO',  label: 'Ш', note: 13, after: 7 },
+  { code: 'KeyP',  label: 'Щ', note: 15, after: 8 }
+];
+
+const KEY_MAP = {};
+WHITE_KEYS.forEach(k => { KEY_MAP[k.code] = k; });
+BLACK_KEYS.forEach(k => { KEY_MAP[k.code] = k; });
+
+const RU_EXTRA = {
+  'KeyZ': { label: 'Я', note: -2 },
+  'KeyX': { label: 'Ч', note: -1 },
+  'KeyC': { label: 'С', note: 0  },
+  'KeyV': { label: 'М', note: 2  },
+  'KeyB': { label: 'И', note: 4  },
+  'KeyN': { label: 'Т', note: 5  },
+  'KeyM': { label: 'Ь', note: 7  },
+  'Comma': { label: 'Б', note: 9  },
+  'Period': { label: 'Ю', note: 11 },
+  'Slash': { label: '.', note: 12 },
+  'BracketLeft': { label: 'Х', note: 10 },
+  'BracketRight': { label: 'Ъ', note: 14 },
+  'Backslash': { label: '\\', note: 16 }
+};
+
+let audioCtx = null, masterGain = null, delayNode = null, delayGain = null, analyser = null;
+let curInstr = 0, curExpr = 0, baseOctave = 4;
+let echoOn = false, sustainOn = false, bigMode = false, xBigMode = false, isRecording = false, loopOn = false;
+const activeNotes = new Map();
+let mediaRecorder = null, recordedChunks = [], recordedBlob = null, loopSource = null, destNode = null;
+
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.15;
+  masterGain.connect(audioCtx.destination);
+  delayNode = audioCtx.createDelay(1.0);
+  delayNode.delayTime.value = 0.28;
+  delayGain = audioCtx.createGain();
+  delayGain.gain.value = 0;
+  const feedback = audioCtx.createGain();
+  feedback.gain.value = 0.35;
+  delayNode.connect(delayGain);
+  delayGain.connect(masterGain);
+  delayNode.connect(feedback);
+  feedback.connect(delayNode);
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 256;
+  masterGain.connect(analyser);
+  destNode = audioCtx.createMediaStreamDestination();
+  masterGain.connect(destNode);
+}
+
+function setMasterVolume(pct) {
+  if (masterGain) masterGain.gain.value = (pct / 100) * 0.45;
+}
+
+function killAllNotes() {
+  activeNotes.forEach((n) => { try { n.stopFn(true); } catch(e) {} });
+  activeNotes.clear();
+}
+
+function midiToFreq(midi) {
+  return 440 * Math.pow(2, (midi - 69) / 12);
+}
+
+function createNoiseBuffer(duration) {
+  const len = audioCtx.sampleRate * duration;
+  const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
+  return buf;
+}
+
+function playNote(noteOffset, keyId) {
+  if (!audioCtx) initAudio();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (activeNotes.has(keyId)) {
+    activeNotes.get(keyId).stopFn(true);
+    activeNotes.delete(keyId);
+  }
+  const instr = INSTRUMENTS[curInstr];
+  const expr = EXPRESSIONS[curExpr];
+  const midi = (baseOctave + (bigMode ? 1 : 0)) * 12 + 12 + noteOffset + (xBigMode ? (keyId.charCodeAt(0) % 5 - 2) : 0);
+  const freq = midiToFreq(midi) * Math.pow(2, (expr.detune || 0) / 1200);
+  const now = audioCtx.currentTime;
+  const oscs = [];
+  let noiseSrc = null;
+  const mainGain = audioCtx.createGain();
+  mainGain.gain.setValueAtTime(0, now);
+  mainGain.gain.linearRampToValueAtTime(instr.vol * expr.gain, now + instr.attack);
+  mainGain.gain.linearRampToValueAtTime(instr.vol * expr.gain * instr.sustain, now + instr.attack + instr.decay);
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = expr.filter || (instr.formant ? instr.formant * 2 : 5000);
+  filter.Q.value = 1.2;
+  mainGain.connect(filter);
+  filter.connect(masterGain);
+  if (echoOn) filter.connect(delayNode);
+  let wave = 'triangle';
+  if (expr.wave) wave = expr.wave;
+  else if (instr.type === 'piano' || instr.type === 'plucked') wave = 'triangle';
+  else if (instr.type === 'bowed' || instr.type === 'voice') wave = 'sawtooth';
+  else if (instr.type === 'organ') wave = 'sine';
+  else if (instr.type === 'brass' || instr.type === 'reed') wave = 'sawtooth';
+  else if (instr.type === 'wind') wave = 'sine';
+  else if (instr.type === 'perc') wave = 'triangle';
+  const detunes = instr.type === 'organ' ? [0, 7, -7, 12] : (instr.type === 'choir' ? [0, 3, -4, 7] : [0, 4, -3]);
+  detunes.forEach((d, i) => {
+    const osc = audioCtx.createOscillator();
+    osc.type = wave;
+    osc.frequency.value = freq * Math.pow(2, d / 1200);
+    const g = audioCtx.createGain();
+    g.gain.value = i === 0 ? 0.7 : 0.18;
+    osc.connect(g);
+    g.connect(mainGain);
+    osc.start(now);
+    oscs.push(osc);
+  });
+  if (instr.type === 'bowed') {
+    const noiseBuf = createNoiseBuffer(2.0);
+    noiseSrc = audioCtx.createBufferSource();
+    noiseSrc.buffer = noiseBuf;
+    noiseSrc.loop = true;
+    const bp = audioCtx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = freq * 1.5;
+    bp.Q.value = 2.5;
+    const noiseG = audioCtx.createGain();
+    noiseG.gain.value = 0.08;
+    noiseSrc.connect(bp);
+    bp.connect(noiseG);
+    noiseG.connect(mainGain);
+    noiseSrc.start(now);
+    const lfo = audioCtx.createOscillator();
+    lfo.frequency.value = 5.5;
+    const lfoG = audioCtx.createGain();
+    lfoG.gain.value = 4.5;
+    lfo.connect(lfoG);
+    oscs.forEach(o => lfoG.connect(o.frequency));
+    lfo.start(now);
+    oscs.push(lfo);
+  }
+  function stopFn(force = false) {
+    const t = audioCtx.currentTime;
+    const rel = force ? 0.03 : instr.release;
+    try {
+      mainGain.gain.cancelScheduledValues(t);
+      mainGain.gain.setValueAtTime(mainGain.gain.value, t);
+      mainGain.gain.linearRampToValueAtTime(0.0001, t + rel);
+      oscs.forEach(o => { try { o.stop(t + rel + 0.05); } catch(e){} });
+      if (noiseSrc) try { noiseSrc.stop(t + rel + 0.05); } catch(e){}
+    } catch(e) {}
+    setTimeout(() => activeNotes.delete(keyId), (rel + 0.1) * 1000);
+  }
+  activeNotes.set(keyId, { oscs, mainGain, stopFn });
+  const el = document.querySelector(`[data-key="${keyId}"]`);
+  if (el) el.classList.add('active');
+  return stopFn;
+}
+
+function releaseNote(keyId) {
+  if (sustainOn) return;
+  if (activeNotes.has(keyId)) {
+    activeNotes.get(keyId).stopFn(false);
+    const el = document.querySelector(`[data-key="${keyId}"]`);
+    if (el) el.classList.remove('active');
+  }
+}
+
+function buildPiano() {
+  const piano = document.getElementById('piano');
+  piano.innerHTML = '';
+  const whiteCount = WHITE_KEYS.length;
+  WHITE_KEYS.forEach((k) => {
+    const div = document.createElement('div');
+    div.className = 'white-key';
+    div.dataset.key = k.code;
+    div.innerHTML = `<div class="lbl">${k.label}</div>`;
+    div.addEventListener('mousedown', e => { e.preventDefault(); playNote(k.note, k.code); });
+    div.addEventListener('mouseup', () => releaseNote(k.code));
+    div.addEventListener('mouseleave', () => releaseNote(k.code));
+    div.addEventListener('touchstart', e => { e.preventDefault(); playNote(k.note, k.code); }, {passive:false});
+    div.addEventListener('touchend', () => releaseNote(k.code));
+    piano.appendChild(div);
+  });
+  BLACK_KEYS.forEach((k) => {
+    const div = document.createElement('div');
+    div.className = 'black-key';
+    div.dataset.key = k.code;
+    div.style.left = `calc(${(k.after + 0.68) / whiteCount * 100}% - 2.4%)`;
+    div.innerHTML = `<div class="lbl">${k.label}</div>`;
+    div.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation(); playNote(k.note, k.code); });
+    div.addEventListener('mouseup', () => releaseNote(k.code));
+    div.addEventListener('mouseleave', () => releaseNote(k.code));
+    div.addEventListener('touchstart', e => { e.preventDefault(); playNote(k.note, k.code); }, {passive:false});
+    div.addEventListener('touchend', () => releaseNote(k.code));
+    piano.appendChild(div);
+  });
+}
+
+function buildDropdowns() {
+  const el = document.getElementById('expr-list');
+  el.innerHTML = '';
+  EXPRESSIONS.forEach((e, i) => {
+    const d = document.createElement('div');
+    d.className = 'dd-item' + (i === curExpr ? ' active' : '');
+    d.textContent = e.name;
+    d.onclick = () => { setExpression(i); hideDropdowns(); };
+    el.appendChild(d);
+  });
+  const il = document.getElementById('instr-list');
+  il.innerHTML = '';
+  INSTRUMENTS.forEach((ins, i) => {
+    const d = document.createElement('div');
+    d.className = 'dd-item' + (i === curInstr ? ' active' : '');
+    d.textContent = ins.name;
+    d.onclick = () => { setInstrument(i); hideDropdowns(); };
+    il.appendChild(d);
+  });
+}
+
+function setInstrument(idx) {
+  killAllNotes();
+  curInstr = idx;
+  document.getElementById('st-instr').textContent = INSTRUMENTS[idx].name;
+  buildDropdowns();
+  drawInstrumentViz();
+}
+
+function setExpression(idx) {
+  curExpr = idx;
+  document.getElementById('st-expr').textContent = EXPRESSIONS[idx].name;
+  buildDropdowns();
+}
+
+function hideDropdowns() {
+  document.getElementById('expr-dropdown').classList.remove('show');
+  document.getElementById('instr-dropdown').classList.remove('show');
+  document.getElementById('expr-btn').classList.remove('active');
+  document.getElementById('instr-btn').classList.remove('active');
+}
+
+function updateModesDisplay() {
+  const parts = [];
+  if (echoOn) parts.push('ЭХО');
+  if (sustainOn) parts.push('СУСТЕЙН');
+  if (bigMode) parts.push('БИГ');
+  if (xBigMode) parts.push('Х-БИГ');
+  if (isRecording) parts.push('● REC');
+  document.getElementById('st-modes').textContent = parts.join(' · ');
+  document.getElementById('st-oct').textContent = baseOctave + (bigMode ? 1 : 0);
+}
+
+const vizCanvas = document.getElementById('viz-canvas');
+const vizCtx = vizCanvas.getContext('2d');
+
+function drawInstrumentViz() {
+  const ctx = vizCtx;
+  const w = vizCanvas.width, h = vizCanvas.height;
+  ctx.clearRect(0, 0, w, h);
+  const instr = INSTRUMENTS[curInstr];
+  const accent = getComputedStyle(document.body).getPropertyValue('--accent').trim() || '#3b82f6';
+  ctx.strokeStyle = accent;
+  ctx.fillStyle = accent;
+  ctx.lineWidth = 2;
+  if (instr.type === 'piano' || instr.id === 'piano') {
+    for (let i = 0; i < 12; i++) {
+      ctx.fillStyle = '#eee';
+      ctx.fillRect(20 + i * 20, 40, 18, 55);
+      ctx.strokeRect(20 + i * 20, 40, 18, 55);
+    }
+    [1,2,4,5,6,8,9,11].forEach(i => {
+      ctx.fillStyle = '#222';
+      ctx.fillRect(32 + i * 20, 40, 12, 32);
+    });
+  } else if (instr.type === 'plucked' || instr.id === 'guitar' || instr.id === 'bassg' || instr.id === 'harp') {
+    ctx.beginPath();
+    ctx.ellipse(140, 65, 70, 40, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(140, 65, 25, 18, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    for (let i = 0; i < 6; i++) {
+      ctx.beginPath();
+      ctx.moveTo(70, 50 + i * 6);
+      ctx.lineTo(210, 50 + i * 6);
+      ctx.stroke();
+    }
+  } else if (instr.type === 'wind' || instr.id === 'flute') {
+    ctx.beginPath();
+    ctx.moveTo(40, 55);
+    ctx.lineTo(240, 55);
+    ctx.lineTo(240, 70);
+    ctx.lineTo(40, 70);
+    ctx.closePath();
+    ctx.stroke();
+    for (let i = 0; i < 6; i++) {
+      ctx.beginPath();
+      ctx.arc(70 + i * 28, 62, 5, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  } else if (instr.type === 'bowed') {
+    ctx.beginPath();
+    ctx.ellipse(130, 60, 45, 35, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(175, 40);
+    ctx.lineTo(230, 30);
+    ctx.lineTo(235, 45);
+    ctx.lineTo(180, 55);
+    ctx.closePath();
+    ctx.stroke();
+    const t = Date.now() / 400;
+    const bx = 90 + Math.sin(t) * 40;
+    ctx.beginPath();
+    ctx.moveTo(bx, 25);
+    ctx.lineTo(bx + 50, 95);
+    ctx.strokeStyle = '#ff6688';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  } else if (instr.type === 'organ') {
+    for (let i = 0; i < 9; i++) {
+      const hh = 30 + (i % 3) * 20;
+      ctx.fillRect(50 + i * 22, 90 - hh, 16, hh);
+      ctx.strokeRect(50 + i * 22, 90 - hh, 16, hh);
+    }
+  } else if (instr.type === 'brass' || instr.type === 'reed') {
+    ctx.beginPath();
+    ctx.moveTo(50, 60);
+    ctx.quadraticCurveTo(120, 40, 180, 55);
+    ctx.quadraticCurveTo(220, 60, 240, 80);
+    ctx.lineTo(230, 90);
+    ctx.quadraticCurveTo(200, 70, 160, 70);
+    ctx.quadraticCurveTo(100, 75, 50, 75);
+    ctx.closePath();
+    ctx.stroke();
+  } else if (instr.type === 'perc') {
+    for (let i = 0; i < 10; i++) {
+      const hh = 25 + Math.sin(i) * 15;
+      ctx.fillRect(40 + i * 22, 80 - hh, 18, hh);
+    }
+  } else if (instr.type === 'voice') {
+    for (let i = 0; i < 5; i++) {
+      ctx.beginPath();
+      ctx.arc(60 + i * 40, 45, 14, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(60 + i * 40, 59);
+      ctx.lineTo(60 + i * 40, 95);
+      ctx.stroke();
+    }
+  }
+}
+
+function animateViz() {
+  drawInstrumentViz();
+  if (analyser) {
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(data);
+    const ctx = vizCtx;
+    const w = vizCanvas.width, h = vizCanvas.height;
+    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--accent2').trim() || '#60a5fa';
+    const barW = w / 32;
+    for (let i = 0; i < 32; i++) {
+      const v = data[i] / 255;
+      ctx.globalAlpha = 0.35;
+      ctx.fillRect(i * barW, h - v * 40, barW - 1, v * 40);
+    }
+    ctx.globalAlpha = 1;
+  }
+  requestAnimationFrame(animateViz);
+}
+
+function startRecording() {
+  if (!audioCtx) initAudio();
+  recordedChunks = [];
+  recordedBlob = null;
+  try {
+    mediaRecorder = new MediaRecorder(destNode.stream, { mimeType: 'audio/webm;codecs=opus' });
+  } catch(e) {
+    mediaRecorder = new MediaRecorder(destNode.stream);
+  }
+  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+  mediaRecorder.onstop = () => {
+    recordedBlob = new Blob(recordedChunks, { type: 'audio/webm' });
+    document.getElementById('export-panel').classList.add('show');
+  };
+  mediaRecorder.start(100);
+  isRecording = true;
+  document.getElementById('btn-rec').classList.add('recording');
+  updateModesDisplay();
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  isRecording = false;
+  document.getElementById('btn-rec').classList.remove('recording');
+  updateModesDisplay();
+}
+
+function handleExport(action) {
+  const panel = document.getElementById('export-panel');
+  switch (action) {
+    case '0':
+      recordedBlob = null; recordedChunks = [];
+      if (loopSource) { try { loopSource.stop(); } catch(e){} loopSource = null; }
+      loopOn = false;
+      document.getElementById('loop-badge').classList.remove('show');
+      panel.classList.remove('show');
+      break;
+    case '1':
+      if (!recordedBlob) return;
+      if (loopSource) { try { loopSource.stop(); } catch(e){} }
+      const url = URL.createObjectURL(recordedBlob);
+      const audio = new Audio(url);
+      audio.loop = true; audio.play();
+      loopSource = audio; loopOn = true;
+      document.getElementById('loop-badge').classList.add('show');
+      panel.classList.remove('show');
+      break;
+    case '2':
+      if (!recordedBlob) return;
+      downloadBlob(recordedBlob, 'vlictor_recording.webm');
+      panel.classList.remove('show');
+      break;
+    case '3':
+      alert('Экспорт видео: сейчас скачивается аудио.');
+      if (recordedBlob) downloadBlob(recordedBlob, 'vlictor_pianoroll_audio.webm');
+      panel.classList.remove('show');
+      break;
+    case '4':
+      if (!recordedBlob) return;
+      try {
+        const item = new ClipboardItem({ 'audio/webm': recordedBlob });
+        navigator.clipboard.write([item]).then(() => alert('Аудио скопировано')).catch(() => alert('Не удалось'));
+      } catch(e) { alert('Буфер недоступен'); }
+      panel.classList.remove('show');
+      break;
+  }
+}
+
+function downloadBlob(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+
+document.getElementById('start-btn').onclick = () => {
+  initAudio();
+  document.getElementById('main-menu').classList.add('hidden');
+  document.getElementById('app-screen').classList.add('active');
+  buildPiano();
+  buildDropdowns();
+  drawInstrumentViz();
+  animateViz();
+  updateModesDisplay();
+};
+
+document.getElementById('back-btn').onclick = () => {
+  killAllNotes();
+  if (isRecording) stopRecording();
+  document.getElementById('app-screen').classList.remove('active');
+  document.getElementById('main-menu').classList.remove('hidden');
+};
+
+document.getElementById('menu-settings-btn').onclick = (e) => {
+  e.stopPropagation();
+  document.getElementById('settings-panel').classList.toggle('show');
+};
+document.body.addEventListener('click', () => {
+  document.getElementById('settings-panel').classList.remove('show');
+});
+document.getElementById('settings-panel').onclick = e => e.stopPropagation();
+
+document.querySelectorAll('.theme-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const th = btn.dataset.theme;
+    document.body.className = th === 'default' ? '' : 'theme-' + th;
+  };
+});
+
+document.getElementById('master-vol').oninput = e => setMasterVolume(+e.target.value);
+
+document.getElementById('expr-btn').onclick = () => {
+  const dd = document.getElementById('expr-dropdown');
+  const was = dd.classList.contains('show');
+  hideDropdowns();
+  if (!was) { dd.classList.add('show'); document.getElementById('expr-btn').classList.add('active'); }
+};
+document.getElementById('instr-btn').onclick = () => {
+  const dd = document.getElementById('instr-dropdown');
+  const was = dd.classList.contains('show');
+  hideDropdowns();
+  if (!was) { dd.classList.add('show'); document.getElementById('instr-btn').classList.add('active'); }
+};
+
+document.querySelector('.center-area').addEventListener('dblclick', () => {
+  hideDropdowns();
+  document.getElementById('instr-dropdown').classList.add('show');
+  document.getElementById('instr-btn').classList.add('active');
+});
+
+document.getElementById('btn-echo').onclick = () => toggleEcho();
+document.getElementById('btn-xbig').onclick = () => toggleXBig();
+document.getElementById('btn-big').onclick = () => toggleBig();
+document.getElementById('btn-rec').onclick = () => toggleRec();
+document.getElementById('btn-sustain').onclick = () => toggleSustain();
+
+document.querySelectorAll('.exp-btn').forEach(b => {
+  b.onclick = () => handleExport(b.dataset.action);
+});
+
+document.getElementById('help-close').onclick = () => document.getElementById('help-overlay').classList.remove('show');
+
+function toggleEcho() {
+  echoOn = !echoOn;
+  if (delayGain) delayGain.gain.value = echoOn ? 0.45 : 0;
+  document.getElementById('btn-echo').classList.toggle('active', echoOn);
+  updateModesDisplay();
+}
+function toggleSustain() {
+  sustainOn = !sustainOn;
+  document.getElementById('btn-sustain').classList.toggle('active', sustainOn);
+  if (!sustainOn) activeNotes.forEach((n) => n.stopFn(false));
+  updateModesDisplay();
+}
+function toggleBig() {
+  bigMode = !bigMode;
+  document.getElementById('btn-big').classList.toggle('active', bigMode);
+  updateModesDisplay();
+}
+function toggleXBig() {
+  xBigMode = !xBigMode;
+  document.getElementById('btn-xbig').classList.toggle('active', xBigMode);
+  updateModesDisplay();
+}
+function toggleRec() {
+  if (isRecording) stopRecording();
+  else startRecording();
+}
+
+const pressed = new Set();
+window.addEventListener('keydown', e => {
+  if (e.repeat) return;
+  const code = e.code;
+  if (code === 'KeyH' && !e.ctrlKey && !e.altKey) {
+    document.getElementById('help-overlay').classList.toggle('show');
+    return;
+  }
+  if (!document.getElementById('app-screen').classList.contains('active')) return;
+  if (code === 'Tab') {
+    e.preventDefault();
+    if (e.shiftKey) toggleSustain();
+    else if (e.getModifierState && e.getModifierState('CapsLock')) {
+      WHITE_KEYS.forEach(k => playNote(k.note, k.code + '_chord'));
+      setTimeout(() => WHITE_KEYS.forEach(k => releaseNote(k.code + '_chord')), 800);
+    } else toggleEcho();
+    return;
+  }
+  if (code === 'Enter') { e.preventDefault(); toggleRec(); return; }
+  if (code === 'Digit1') { e.preventDefault(); document.getElementById('expr-btn').click(); return; }
+  if (code === 'Digit2') { e.preventDefault(); document.getElementById('instr-btn').click(); return; }
+  if (code === 'ArrowUp') { baseOctave = Math.min(7, baseOctave + 1); updateModesDisplay(); return; }
+  if (code === 'ArrowDown') { baseOctave = Math.max(1, baseOctave - 1); updateModesDisplay(); return; }
+  if (code === 'AltLeft' || code === 'AltRight') { e.preventDefault(); toggleXBig(); return; }
+  if (code === 'CapsLock') { toggleBig(); return; }
+  let keyInfo = KEY_MAP[code];
+  if (!keyInfo && RU_EXTRA[code]) keyInfo = { code, label: RU_EXTRA[code].label, note: RU_EXTRA[code].note };
+  if (keyInfo && !pressed.has(code)) {
+    pressed.add(code);
+    playNote(keyInfo.note, code);
+  }
+});
+
+window.addEventListener('keyup', e => {
+  const code = e.code;
+  if (pressed.has(code)) {
+    pressed.delete(code);
+    releaseNote(code);
+  }
+});
+
+document.addEventListener('contextmenu', e => {
+  if (e.target.classList.contains('white-key') || e.target.classList.contains('black-key')) e.preventDefault();
+});
+
+document.getElementById('master-vol').value = 15;
+</script>
+</body>
+</html>
